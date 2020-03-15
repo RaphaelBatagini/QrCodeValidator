@@ -54,4 +54,8 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 </dict>
+<key>NSCameraUsageDescription</key> 
+<string>Allow the app to access the camera</string> 
+<key>NSPhotoLibraryUsageDescription</key> 
+<string>Allow the app to access media library</string>
 </plist>
