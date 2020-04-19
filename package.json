@@ -12,8 +12,8 @@
   "dependencies": {
     "react": "16.9.0",
     "react-native": "0.61.5",
-    "react-native-camera": "^3.19.1",
-    "react-native-permissions": "^2.0.10",
+    "react-native-camera": "^3.22.1",
+    "react-native-permissions": "^2.1.0",
     "react-native-qrcode-scanner": "^1.4.0"
   },
   "devDependencies": {
