@@ -27,12 +27,12 @@ export default class Main extends Component {
   login = async () => {
     try {
       const {username, password} = this.state;
-      const response = await api.post('/login', {
+      await api.post('/login', {
         user: username,
         pass: password,
       });
       Alert.alert('Login realizado com sucesso');
-      console.log(response);
+      this.props.navigation.navigate('ScanScreen');
     } catch (error) {
       Alert.alert('Falha ao realizar login');
     }
