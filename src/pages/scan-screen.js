@@ -1,6 +1,15 @@
 import React, {Component} from 'react';
+import api from '../services/api';
 
-import {Text, StyleSheet, Alert, View, Dimensions} from 'react-native';
+import {
+  Text,
+  StyleSheet,
+  View,
+  Dimensions,
+  ActivityIndicator,
+  Modal,
+  Alert,
+} from 'react-native';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 
 export default class ScanScreen extends Component {
@@ -8,10 +17,25 @@ export default class ScanScreen extends Component {
     title: 'QrCodeValidator',
   };
 
-  state = {};
+  state = {
+    loading: false,
+  };
 
-  onSuccess = e => {
-    Alert.alert(e.data);
+  onSuccess = async e => {
+    this.setState({loading: true});
+    try {
+      await api.post('/validate-qrcode', {
+        data: e.data,
+      });
+
+      Alert.alert(
+        'Cupom validado com sucesso!',
+        'Desconto concedido com sucesso.',
+      );
+    } catch (error) {
+      Alert.alert('Falha ao validar cupom!', 'Tente novamente mais tarde.');
+    }
+    this.setState({loading: false});
   };
 
   render() {
@@ -29,6 +53,12 @@ export default class ScanScreen extends Component {
             </View>
           }
         />
+        <Modal visible={this.state.loading} style={styles.modal}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalText}>Validando cupom...</Text>
+            <ActivityIndicator size={'large'} style={styles.modalLoader} />
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -51,6 +81,26 @@ const styles = StyleSheet.create({
   },
 
   cameraContainer: {
-    height: Dimensions.get('window').height,
+    height: Dimensions.get('window').height / 2,
+  },
+
+  modal: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  modalContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  modalText: {
+    fontSize: 20,
+  },
+
+  modalLoader: {
+    marginTop: 20,
   },
 });
