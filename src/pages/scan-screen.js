@@ -19,24 +19,79 @@ export default class ScanScreen extends Component {
 
   state = {
     loading: false,
+    partnerId: null,
   };
 
   onSuccess = async e => {
     this.setState({loading: true});
     try {
-      await api.post('/validate-qrcode', {
-        data: e.data,
+      const validateData = {
+        customer: e.data,
+        partner: this.state.partnerId,
+      };
+
+      const response = await api.post('/validate-qrcode', validateData);
+
+      Object.assign(validateData, {
+        validate: true,
       });
+
+      const customer = response.data;
+
+      const formatDate = date =>
+        date
+          .split('-')
+          .reverse()
+          .join('/');
 
       Alert.alert(
         'Cupom validado com sucesso!',
-        'Desconto concedido com sucesso.',
+        `
+          Nome: ${customer.name}
+          Email: ${customer.email}
+          Porc. de desconto: ${customer.discount}
+          Validade: ${formatDate(customer.shelf_life)}
+          Estabelecimento: ${customer.establishment}
+        `,
+        [
+          {
+            text: 'Cancelar',
+            onPress: () => {},
+            style: 'cancel',
+          },
+          {
+            text: 'Confirmar desconto',
+            onPress: () => {
+              this.validateCupom(validateData);
+            },
+          },
+        ],
+        {cancelable: true},
       );
     } catch (error) {
+      if (error.response.data.message) {
+        Alert.alert(error.response.data.message);
+        this.setState({loading: false});
+        return;
+      }
       Alert.alert('Falha ao validar cupom!', 'Tente novamente mais tarde.');
     }
     this.setState({loading: false});
   };
+
+  async validateCupom(customerData) {
+    try {
+      await api.post('/validate-qrcode', customerData);
+      Alert.alert('Desconto aplicado com sucesso');
+    } catch (error) {
+      Alert.alert('Houve um erro ao validar seu cupom, tente novamente');
+    }
+  }
+
+  componentDidMount() {
+    const {navigation} = this.props;
+    this.state.partnerId = navigation.getParam('userId');
+  }
 
   render() {
     return (

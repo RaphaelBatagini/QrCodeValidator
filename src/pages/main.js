@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import api from '../services/api';
 
 import {View, Text, TextInput, Button, Alert, StyleSheet} from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 
 export default class Main extends Component {
   static navigationOptions = {
@@ -13,30 +14,68 @@ export default class Main extends Component {
     password: '',
   };
 
-  // componentDidMount() {
-  //   this.validateAuth();
-  // }
+  componentDidMount() {
+    AsyncStorage.getItem('@currentUser').then(user => {
+      this.login(null, JSON.parse(user));
+    });
+  }
 
-  // // method to validate current user
-  // validateAuth = async () => {
-  //   const response = await api.get();
-
-  //   console.log(response);
-  // };
-
-  login = async () => {
+  login = async (_, currentUser) => {
     try {
-      const {username, password} = this.state;
-      await api.post('/login', {
+      let username, password;
+      if (currentUser) {
+        username = currentUser.user;
+        password = currentUser.pass;
+      } else {
+        username = this.state.username;
+        password = this.state.password;
+      }
+
+      if (!username && !password) {
+        return;
+      }
+
+      const response = await api.post('/login', {
         user: username,
         pass: password,
       });
+
+      if (!currentUser) {
+        await this.saveCurrentUser(username, password);
+      }
+
+      let partner;
+      if (response.data) {
+        partner = response.data.user;
+      }
+
       Alert.alert('Login realizado com sucesso');
-      this.props.navigation.navigate('ScanScreen');
+      this.props.navigation.navigate('ScanScreen', {
+        userId: partner.ID,
+      });
     } catch (error) {
+      console.log(error.message);
       Alert.alert('Falha ao realizar login');
     }
   };
+
+  async saveCurrentUser(user, pass) {
+    try {
+      const data = JSON.stringify({user, pass});
+      await AsyncStorage.setItem('@currentUser', data);
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  async getCurrentUser() {
+    try {
+      const user = await AsyncStorage.getItem('@currentUser');
+      return user;
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   render() {
     return (
