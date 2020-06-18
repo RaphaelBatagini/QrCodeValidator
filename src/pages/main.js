@@ -12,6 +12,8 @@ export default class Main extends Component {
   state = {
     username: '',
     password: '',
+    logged: false,
+    partner: null,
   };
 
   componentDidMount() {
@@ -44,20 +46,35 @@ export default class Main extends Component {
         await this.saveCurrentUser(username, password);
       }
 
-      let partner;
       if (response.data) {
-        partner = response.data.user;
+        this.setState({partner: response.data.user});
       }
 
       Alert.alert('Login realizado com sucesso');
+      this.setState({logged: true});
       this.props.navigation.navigate('ScanScreen', {
-        userId: partner.ID,
+        userId: this.state.partner.ID,
       });
     } catch (error) {
       console.log(error.message);
       Alert.alert('Falha ao realizar login');
     }
   };
+
+  logout = async () => {
+    try {
+      await AsyncStorage.clear();
+      this.setState({logged: false});
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  goToCamera() {
+    this.props.navigation.navigate('ScanScreen', {
+      userId: this.state.partner.ID,
+    });
+  }
 
   async saveCurrentUser(user, pass) {
     try {
@@ -78,7 +95,7 @@ export default class Main extends Component {
   }
 
   render() {
-    return (
+    return !this.state.logged ? (
       <View style={styles.container}>
         <Text>Preencha suas credenciais para validar cupons!</Text>
         <TextInput
@@ -95,6 +112,11 @@ export default class Main extends Component {
           style={styles.input}
         />
         <Button onPress={this.login.bind(this)} title="Entrar" />
+      </View>
+    ) : (
+      <View style={styles.container}>
+        <Button onPress={this.logout.bind(this)} title="Sair" />
+        <Button onPress={this.goToCamera.bind(this)} title="Abrir Câmera" />
       </View>
     );
   }
